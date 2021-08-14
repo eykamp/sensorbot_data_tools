@@ -5,6 +5,8 @@
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(pacman, RSQLite, DBI, ggmap, tidyverse, RColorBrewer)
 
+dbname <- "C:/dev/sensorbot/sensorbot.db"
+
 conn <- dbConnect(drv = RSQLite::SQLite(), dbname = dbname)
 sensorLocs <- dbGetQuery(conn, "
             SELECT name, attribute_key, attribute_kv.long_v, attribute_kv.dbl_v,
@@ -17,6 +19,7 @@ sensorLocs <- dbGetQuery(conn, "
             WHERE (attribute_key = 'longitude' OR attribute_key = 'latitude')
             AND (key = 9 OR key = 13) 
             ORDER BY name, attribute_key")
+dbDisconnect(conn)
 
 lats <- sensorLocs %>%
     filter(attribute_key == "latitude") %>%
@@ -41,8 +44,12 @@ mapBounds = c(left =   -122.85,
               top =    45.65)
 
 map <- get_map(mapBounds)
-ggmap(map) + 
-    geom_point(data = latLongs, aes(x = longs, y = lats, color = pm25)) + 
+ggmap(map, 
+    base_layer = ggplot(data = latLongs, 
+                        aes(x = longs, y = lats, color = pm25))) + 
+    geom_point() + 
     scale_color_distiller(palette = "YlOrRd", direction = 1, trans = "log")
+
 # scale_color_distiller uses RColorBrewer palettes.
 # https://www.r-graph-gallery.com/38-rcolorbrewers-palettes.html
+
