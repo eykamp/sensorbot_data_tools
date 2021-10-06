@@ -126,5 +126,3 @@ noquote(
     "To load, type: load('", savename, "')"
   )
 )
-
-
