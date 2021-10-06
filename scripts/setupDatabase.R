@@ -24,25 +24,25 @@ dir.create(dirname, showWarnings = FALSE)
 
 # close the connection from the last session, if it still exists
 if (exists("conn")) {
-    suppressWarnings(dbDisconnect(conn))
+  suppressWarnings(dbDisconnect(conn))
 }
 
 # download the latest version of the database if a copy doesn't already exist.
 # If you need the very latest version, delete the file C:/dev/sensorbot/sensorbot.db.gz
 # before running this script to re-download the database.
 if (!file.exists(filename)) {
-    noquote(paste0("downloading file ", filename))
-    options(timeout = 7200) # set the timeout to two hours (default 60s)
-    download.file(url, filename, "libcurl") # takes ~15 mins
+  noquote(paste0("downloading file ", filename))
+  options(timeout = 7200) # set the timeout to two hours (default 60s)
+  download.file(url, filename, "libcurl") # takes ~15 mins
 }
 
 # unzip the database if it's not already unzipped. If you need to reset 
 # the database, delete the file C:/dev/sensorbot/sensorbot.db
 # before running this script to re-extract it from the zipped file.
 if (!file.exists(dbname)) {
-    noquote(paste0("unzipping file ", dbname))
-    gunzip(filename, dbname, remove = FALSE) # takes ~5 mins
-    # set remove = TRUE to delete the compressed file after unzipping
+  noquote(paste0("unzipping file ", dbname))
+  gunzip(filename, dbname, remove = FALSE) # takes ~5 mins
+  # set remove = TRUE to delete the compressed file after unzipping
 }
 
 # run a whole bunch of SQL commands. This query will generate hourly 
@@ -50,37 +50,49 @@ if (!file.exists(dbname)) {
 # an hour to run.
 noquote("creating hourly data averages")
 conn <- dbConnect(drv = RSQLite::SQLite(), dbname = dbname)
-dbExecute(conn, "DROP TABLE IF EXISTS ts_kv_hourly")
-dbExecute(conn, "CREATE TABLE ts_kv_hourly (
-                    entity_id STRING NOT NULL,
-                    key INT NOT NULL,
-                    ts INT NOT NULL,
-                    val FLOAT
-                 )")
-dbExecute(conn, "INSERT INTO ts_kv_hourly
-                    SELECT entity_id, key, 
-                        CAST (ts / (1000 * 60 * 60) AS INT) * (1000 * 60 * 60) AS ts_hourly, AVG(dbl_v) as val
-                    FROM ts_kv AS tskv
-                    WHERE tskv.key IN (
-                        SELECT key_id FROM ts_kv_dictionary WHERE key IN (
-                            'plantowerPM1concRaw', 
-                            'plantowerPM25concRaw', 
-                            'plantowerPM10concRaw', 
-                            'pm1', 
-                            'pm25', 
-                            'pm10', 
-                            'blackCarbon', 
-                            'temperature', 
-                            'humidity', 
-                            'pressure'
-                        )
-                    )
-                    GROUP BY ts_hourly, entity_id, key")
+dbExecute(conn, 
+  "DROP TABLE IF EXISTS ts_kv_hourly")
+dbExecute(conn, 
+  "CREATE TABLE ts_kv_hourly (
+    entity_id STRING NOT NULL,
+    key INT NOT NULL,
+    ts INT NOT NULL,
+    val FLOAT
+  )"
+)
+dbExecute(conn, 
+  "INSERT INTO ts_kv_hourly
+    SELECT entity_id, key, 
+      CAST (ts / (1000 * 60 * 60) AS INT) * (1000 * 60 * 60) 
+        AS ts_hourly, 
+      AVG(dbl_v) 
+        AS val
+    FROM ts_kv AS tskv
+    WHERE tskv.key IN (
+      SELECT key_id FROM ts_kv_dictionary WHERE key IN (
+        'plantowerPM1concRaw', 
+        'plantowerPM25concRaw', 
+        'plantowerPM10concRaw', 
+        'pm1', 
+        'pm25', 
+        'pm10', 
+        'blackCarbon', 
+        'temperature', 
+        'humidity', 
+        'pressure'
+      )
+    )
+    GROUP BY ts_hourly, entity_id, key"
+)
 # The timestamps of sensorbot data are offset by 1 hour from DEQ (DEQ records 
 # at the end of the hour and sensorbot rounds down to the start of the hour)
 # The next line brings the timestamps into alignment.
-dbExecute(conn, "UPDATE ts_kv_hourly SET ts = ts + 60 * 60 * 1000
-                    WHERE entity_id in (SELECT id FROM device WHERE type != 'DEQ')")
+dbExecute(conn, 
+ "UPDATE ts_kv_hourly SET ts = ts + 60 * 60 * 1000
+  WHERE entity_id IN (
+    SELECT id FROM device WHERE type != 'DEQ'
+  )"
+)
 # Dropping the 30-second data and vacuuming frees up most of the disk space.
 dbExecute(conn, "DROP table ts_kv")
 dbExecute(conn, "VACUUM")
@@ -90,12 +102,17 @@ dbExecute(conn, "CREATE INDEX ts_kv_hourly_data_ts ON ts_kv_hourly(ts)")
 dbExecute(conn, "CREATE INDEX ts_kv_hourly_data_key ON ts_kv_hourly(key)")
 dbExecute(conn, "CREATE INDEX ts_kv_id_key ON ts_kv_hourly(entity_id, key)")
 dbExecute(conn, "CREATE INDEX ts_kv_ts ON ts_kv_hourly(ts)")
-dbExecute(conn, "DROP VIEW IF EXISTS TSKV")
 # Create a view for querying the most essential data
-dbExecute(conn, "CREATE VIEW tskv AS
-                    SELECT device.name, device.type, ts, dict.key, val FROM ts_kv_hourly AS tskv 
-                    INNER JOIN ts_kv_dictionary AS dict ON tskv.key = dict.key_id
-                    INNER JOIN device ON device.id = tskv.entity_id")
+dbExecute(conn, "DROP VIEW IF EXISTS TSKV")
+dbExecute(conn, 
+ "CREATE VIEW tskv AS
+    SELECT device.name, device.type, ts, dict.key, val 
+      FROM ts_kv_hourly AS tskv 
+    INNER JOIN ts_kv_dictionary AS dict 
+      ON tskv.key = dict.key_id
+    INNER JOIN device 
+      ON device.id = tskv.entity_id"
+)
 # Now read the view into a dataframe
 df <- dbGetQuery(conn, "select * from tskv")
 dbDisconnect(conn)
@@ -103,6 +120,11 @@ dbDisconnect(conn)
 # save the workspace variable df
 save(df, file = savename)
 
-noquote(paste0("Sensorbot data is stored in the variable 'df'. ", 
-               "To load, type: load('", savename, "')"))
+noquote(
+  paste0(
+    "Sensorbot data is stored in the variable 'df'. ", 
+    "To load, type: load('", savename, "')"
+  )
+)
+
 
