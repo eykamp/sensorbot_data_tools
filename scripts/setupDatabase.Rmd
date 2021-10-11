@@ -7,6 +7,8 @@ output: html_document
 
 This script downloads the latest version of the Sensorbot database, unzips it, and averages the data by hour. Creates a view of the hourly data joined with device name and measurement type. Saves this view as a dataframe. All files are stored in `C:/dev/sensorbot`.
 
+This script saves a version of `sensorbot.db.gz` and `sensorbot.db` in your file system. When you run it again, if those files exist, it will not download them again. If there is an issue with your data, or if you want to get the latest Sensorbot data, you must delete these two files before re-running this script.
+
 This program will take about an hour to run, most of it processing time, and you will considerable disk space available. 50GB should be enough as of this writing. The final result will be much smaller.
 
 ```{r setup, include=FALSE}
