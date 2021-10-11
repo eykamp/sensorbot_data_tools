@@ -29,20 +29,22 @@ new_names[["pm10"]]                 <- "pm10_deq"
 unique_cols = c("name", "ts")
 df_processed <- unique(df[unique_cols])
 for (new_key in unique(df$key)) {
-    new_column <- data.frame(filter(df, key == new_key)) %>%
-        select(all_of(unique_cols), val)
-    df_processed <- left_join(df_processed, new_column, by = unique_cols)
-    colnames(df_processed)[colnames(df_processed) == "val"] <- new_names[[new_key]]
+  new_column <- data.frame(filter(df, key == new_key)) %>%
+    select(all_of(unique_cols), val)
+  df_processed <- left_join(df_processed, new_column, by = unique_cols)
+  colnames(df_processed)[colnames(df_processed) == "val"] <- new_names[[new_key]]
 }
 
-df_processed <- mutate(df_processed,
-                    date = ts %>%
-                        divide_by(1000) %>%
-                        round() %>%
-                        as.POSIXct(origin = "1970-01-01"),
-                    .keep = "unused",
-                    .after = name
-                )
+df_processed <- 
+  df_processed %>%
+  mutate(
+    date = ts %>%
+      divide_by(1000) %>%
+      round() %>%
+      as.POSIXct(origin = "1970-01-01"),
+    .keep = "unused",
+    .after = name
+  )
 
 # The following are functions from the OpenAir library. Run them one
 # at a time to generate nice-looking visualizations.
