@@ -165,6 +165,22 @@ df <- dbGetQuery(conn, "select * from tskv")
 
 # close the connection
 dbDisconnect(conn)
+```
+
+### Convert Timestamps to Datetimes
+
+Also saves the data as `df` in the file `C:/dev/sensorbot/sensorbot.RData`.
+
+```{r timestamp}
+
+df <- 
+  df %>%
+  mutate(
+    ts = ts %>%
+      divide_by(1000) %>%
+      round() %>%
+      as.POSIXct(origin = "1970-01-01")
+  )
 
 # save the workspace variable df
 save(df, file = savename)
@@ -178,23 +194,8 @@ noquote(
 
 ```
 
-### Convert Timestamps to Datetimes
-
-```{r timestamp}
-
-df <- 
-  df %>%
-  mutate(
-    ts = ts %>%
-      divide_by(1000) %>%
-      round() %>%
-      as.POSIXct(origin = "1970-01-01")
-  )
-
-```
-
 ### All set!
 
 Type `load("C:/dev/sensorbot/sensorbot.RData")` to load the `df` object with the sensorbot data.
 
-This script loaded the most frequently used data from the database, but there is much more data to explore, including information on different device types and locations in the `sensorbot.db` file.
+This script loads the most frequently used data from the database, but there is much more data to explore, including information on different device types and locations in the `sensorbot.db` file.
