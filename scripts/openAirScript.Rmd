@@ -33,32 +33,26 @@ load("C:/dev/sensorbot/sensorbot.RData")
 
 ```
 
-### Rename key-value pairs
+### Pivot and Rename key-value pairs
 
 ```{r rename}
 
-# create a dictionary for renaming the columns
-# new_names[[oldName]] <- newName
-new_names <- hash()
-new_names[["plantowerPM1concRaw"]]  <- "pm1"
-new_names[["plantowerPM25concRaw"]] <- "pm25"
-new_names[["plantowerPM10concRaw"]] <- "pm10"
-new_names[["humidity"]]             <- "humidity"
-new_names[["pressure"]]             <- "pressure"
-new_names[["temperature"]]          <- "temperature"
-new_names[["pm1"]]                  <- "pm1_deq"
-new_names[["pm25"]]                 <- "pm25_deq"
-new_names[["pm10"]]                 <- "pm10_deq"
-
-unique_cols = c("name", "ts")
-df_processed <- unique(df[unique_cols])
-for (new_key in unique(df$key)) {
-  new_column <- data.frame(filter(df, key == new_key)) %>%
-    select(all_of(unique_cols), val)
-  df_processed <- left_join(df_processed, new_column, by = unique_cols)
-  colnames(df_processed)[colnames(df_processed) == "val"] <- new_names[[new_key]]
-}
-
+df_processed <- 
+  df %>%
+  pivot_wider(
+    names_from = key, 
+    values_from = val
+  ) %>%
+  rename(
+    date = ts, 
+    pm1 = plantowerPM1concRaw, 
+    pm25 = plantowerPM25concRaw, 
+    pm10 = plantowerPM10concRaw, 
+    humidity = humidity, 
+    pressure = pressure, 
+    temperature = temperature, 
+    pm25_deq = pm25
+  )
 ```
 
 ### Examples
