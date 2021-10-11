@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # install or load required packages using pacman
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(pacman, RSQLite, DBI, R.utils)
+pacman::p_load(pacman, RSQLite, DBI, R.utils, tidyverse)
 
 ```
 
@@ -175,6 +175,21 @@ noquote(
     "To load, type: load('", savename, "')"
   )
 )
+
+```
+
+### Convert Timestamps to Datetimes
+
+```{r timestamp}
+
+df <- 
+  df %>%
+  mutate(
+    ts = ts %>%
+      divide_by(1000) %>%
+      round() %>%
+      as.POSIXct(origin = "1970-01-01")
+  )
 
 ```
 

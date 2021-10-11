@@ -61,22 +61,6 @@ for (new_key in unique(df$key)) {
 
 ```
 
-### Convert Timestamps to Datetimes
-
-```{r timestamp}
-df_processed <- 
-  df_processed %>%
-  mutate(
-    date = ts %>%
-      divide_by(1000) %>%
-      round() %>%
-      as.POSIXct(origin = "1970-01-01"),
-    .keep = "unused",
-    .after = name
-  )
-
-```
-
 ### Examples
 
 The following are functions from the OpenAir library. Run them one at a
