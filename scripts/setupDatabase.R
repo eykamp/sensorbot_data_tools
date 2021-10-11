@@ -57,6 +57,7 @@ dbExecute(conn, "CREATE TABLE ts_kv_hourly (
                     ts INT NOT NULL,
                     val FLOAT
                  )")
+
 dbExecute(conn, "INSERT INTO ts_kv_hourly
                     SELECT entity_id, key, 
                         CAST (ts / (1000 * 60 * 60) AS INT) * (1000 * 60 * 60) AS ts_hourly, AVG(dbl_v) as val
