@@ -11,18 +11,15 @@ editor_options:
 Creates a map of the Portland area with the locations of sensorbot
 sensors, colored by the latest PM2.5 readings in the database.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ### Install packages
 
 ```{r packages}
 
 # install or load required packages using pacman
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(pacman, RSQLite, DBI, ggmap, tidyverse, RColorBrewer)
+pacman::p_load(pacman, RSQLite, DBI, ggmap, tidyverse, RColorBrewer, knitr)
 
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Run SQL query

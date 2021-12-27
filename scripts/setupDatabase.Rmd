@@ -11,18 +11,15 @@ This script saves a version of `sensorbot.db.gz` and `sensorbot.db` in your file
 
 This program will take about an hour to run, most of it processing time, and you will considerable disk space available. 50GB should be enough as of this writing. The final result will be much smaller.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ### Install packages
 
 ```{r install packages}
 
 # install or load required packages using pacman
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(pacman, RSQLite, DBI, R.utils, tidyverse)
+pacman::p_load(pacman, RSQLite, DBI, R.utils, tidyverse, magrittr, lubridate, knitr)
 
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Set up files
@@ -167,35 +164,43 @@ df <- dbGetQuery(conn, "select * from tskv")
 dbDisconnect(conn)
 ```
 
-### Convert Timestamps to Datetimes
+### Tidy and save R dataframes
 
-Also saves the data as `df` in the file `C:/dev/sensorbot/sensorbot.RData`.
+Reshapes columns, renames variables, and converts timestamps to a human-readable format.
+
+Saves two copies of the data: The raw dataframe `df` can be used for further SQL queries, and the processed dataframe `df_processed` can be used for data analysis in R. Both dataframes are stored in the file `C:/dev/sensorbot/sensorbot.RData`.
 
 ```{r timestamp}
 
-df <- 
+df_processed <- 
   df %>%
+  pivot_wider(
+    names_from = key, 
+    values_from = val
+  ) %>% 
   mutate(
     ts = ts %>%
       divide_by(1000) %>%
       round() %>%
-      as.POSIXct(origin = "1970-01-01")
+      as_datetime(tz = "US/Pacific")
+  ) %>%
+  rename(
+    date = ts, 
+    pm1 = plantowerPM1concRaw, 
+    pm25 = plantowerPM25concRaw, 
+    pm10 = plantowerPM10concRaw, 
+    humidity = humidity, 
+    pressure = pressure, 
+    temperature = temperature, 
+    pm25_deq = pm25
   )
-
+  
 # save the workspace variable df
-save(df, file = savename)
-
-noquote(
-  paste0(
-    "Sensorbot data is stored in the variable 'df'. ", 
-    "To load, type: load('", savename, "')"
-  )
-)
-
+save(df, df_processed, file = savename)
 ```
 
 ### All set!
 
-Type `load("C:/dev/sensorbot/sensorbot.RData")` to load the `df` object with the sensorbot data.
+Type `load("C:/dev/sensorbot/sensorbot.RData")` to load the `df` objects with the sensorbot data.
 
 This script loads the most frequently used data from the database, but there is much more data to explore, including information on different device types and locations in the `sensorbot.db` file.

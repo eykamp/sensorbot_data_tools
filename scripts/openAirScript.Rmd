@@ -16,50 +16,28 @@ different measurements in separate columns. Also converts the timestamps
 to datetime objects. Run the OpenAir functions at the end of the script
 to create various visualizations.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 ### Install Packages and load sensorbot data
 
 ```{r packages}
 
 # install or load required packages using pacman
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(pacman, openair, tidyverse, magrittr, hash)
+pacman::p_load(pacman, openair, tidyverse, knitr)
+
+knitr::opts_chunk$set(echo = TRUE)
 
 # load the dataframe saved from the setupDatabase.R script
 load("C:/dev/sensorbot/sensorbot.RData")
-
-```
-
-### Pivot and Rename key-value pairs
-
-```{r rename}
-
-df_processed <- 
-  df %>%
-  pivot_wider(
-    names_from = key, 
-    values_from = val
-  ) %>%
-  rename(
-    date = ts, 
-    pm1 = plantowerPM1concRaw, 
-    pm25 = plantowerPM25concRaw, 
-    pm10 = plantowerPM10concRaw, 
-    humidity = humidity, 
-    pressure = pressure, 
-    temperature = temperature, 
-    pm25_deq = pm25
-  )
-
 ```
 
 ### Examples
 
 The following are functions from the OpenAir library. Run them one at a
 time to generate nice-looking visualizations.
+
+Make sure you use the tidy dataframe `df_processed` (created when you
+ran the `setupDatabase.Rmd` script), and not the raw `df`, when working
+with OpenAir functions.
 
 ```{r example1}
 
